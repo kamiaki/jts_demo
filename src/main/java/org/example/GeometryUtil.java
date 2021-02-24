@@ -50,6 +50,13 @@ public class GeometryUtil {
 
     /**
      * 判断点，在那个行政区划
+     * 1.创建一个点。
+     * 2.用中国json，获取所有省。查不到就返回。
+     * 3.遍历所有省，点在其中。省代码补零填入，省名填入。
+     * 4.没补零省代码，查所有市。查不到就跳出。
+     * 5.遍历所有市，点在市内，市代码补零写入，市名写入。
+     * 4.补零市代码，查所有县。查不到就跳出。
+     * 5.遍历所有县，点在其中。县代码补零填入，县名填入。
      * return String [[xxxx,省]，[xxxx,市]，[xxxx,县]]
      */
     public static String[][] getPointInPcc(double lon, double lat) throws Exception {

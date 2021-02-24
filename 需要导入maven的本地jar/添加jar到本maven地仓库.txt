@@ -1,0 +1,26 @@
+mvn install:install-file -Dfile=gt-geojson-9.2.jar -DgroupId=org.geotools -DartifactId=gt-geojson -Dversion=9.2 -Dpackaging=jar
+
+<dependency>
+    <groupId>org.geotools</groupId>
+    <artifactId>gt-geojson</artifactId>
+    <version>9.2</version>
+</dependency>
+
+
+mvn install:install-file -Dfile=Mapdata.jar -DgroupId=com.hydf.mapdata -DartifactId=mapdata -Dversion=1.0.0 -Dpackaging=jar
+
+<dependency>
+    <groupId>com.hydf.mapdata</groupId>
+    <artifactId>mapdata</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+
+mvn install:install-file -Dfile=datamask-1.0.0.jar -DgroupId=com.smap.datamask -DartifactId=smap-datamask -Dversion=1.0.0 -Dpackaging=jar
+        <smap-datamask.version>1.0.0</smap-datamask.version>
+
+      <dependency>
+                <groupId>com.smap.datamask</groupId>
+                <artifactId>smap-datamask</artifactId>
+                <version>${smap-datamask.version}</version>
+            </dependency>

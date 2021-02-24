@@ -28,14 +28,6 @@ public class GeometryUtil {
     private final static GeometryFactory geometryFactory = new GeometryFactory();
     private final static String CHINA = "/china.json";
 
-    public static void main(String[] args) throws Exception {
-        String[][] pointInPcc = getPointInPcc(116.410162,39.842012);
-        System.out.println(pointInPcc[0][0] + pointInPcc[0][1]);
-        System.out.println(pointInPcc[1][0] + pointInPcc[1][1]);
-        System.out.println(pointInPcc[2][0] + pointInPcc[2][1]);
-    }
-
-
     /**
      * 在右边 补零到指定位数
      * @param str
@@ -285,50 +277,55 @@ public class GeometryUtil {
         return polygon;
     }
 
-//    /**
-//     * @param args
-//     */
-//    public static void main(String[] args) throws ParseException {
-//        Coordinate coordinate = new Coordinate(1, 1);
-//        Point point = createPoint(coordinate);
-//        Point pointByWKT = createPointByWKT("POINT (109.013388 32.715519)");
-//        MultiPoint mulPointByWKT = createMulPointByWKT("MULTIPOINT(109.013388 32.715519,119.32488 31.435678)");
-//        Coordinate[] coords = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
-//        LineString line = createLine(coords);
-//
-//        System.out.println(point);
-//        System.out.println(pointByWKT);
-//        System.out.println(mulPointByWKT);
-//        System.out.println(line);
-//
-//        LineString lineByWKT = createLineByWKT("LINESTRING(0 0, 2 0)");
-//        List<Coordinate[]> List = new LinkedList<>();
-//        Coordinate[] coords1 = new Coordinate[]{new Coordinate(2, 1), new Coordinate(4, 2)};
-//        Coordinate[] coords2 = new Coordinate[]{new Coordinate(3, 2), new Coordinate(1, 2)};
-//        List.add(coords1);
-//        List.add(coords2);
-//        MultiLineString mLine = createMLine(List);
-//        System.out.println(lineByWKT);
-//        System.out.println(mLine);
-//
-//        MultiLineString mLineByWKT = createMLineByWKT("MULTILINESTRING((0 0, 2 0),(1 1,2 2))");
-//        Polygon polygonByWKT = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
-//        System.out.println(mLineByWKT);
-//        System.out.println(polygonByWKT);
-//
-//        MultiPolygon mulPolygonByWKT = createMulPolygonByWKT("MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))");
-//        System.out.println(mulPolygonByWKT);
-//
-//        Coordinate[] coords3 = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
-//        LineString line2 = createLine(coords3);
-//        Polygon poly = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
-//        Geometry g1 = geometryFactory.createGeometry(line2);
-//        Geometry g2 = geometryFactory.createGeometry(poly);
-//        Geometry[] garray = new Geometry[]{g1, g2};
-//        GeometryCollection geoCollect = createGeoCollect(garray);
-//        System.out.println(geoCollect);
-//
-//        Polygon circle = createCircle(0, 0, 20, 32);
-//        System.out.println(circle);
-//    }
+    /**
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        String[][] pointInPcc = getPointInPcc(116.410162,39.842012);
+        System.out.println(pointInPcc[0][0] + pointInPcc[0][1]);
+        System.out.println(pointInPcc[1][0] + pointInPcc[1][1]);
+        System.out.println(pointInPcc[2][0] + pointInPcc[2][1]);
+
+        Coordinate coordinate = new Coordinate(1, 1);
+        Point point = createPoint(coordinate);
+        Point pointByWKT = createPointByWKT("POINT (109.013388 32.715519)");
+        MultiPoint mulPointByWKT = createMulPointByWKT("MULTIPOINT(109.013388 32.715519,119.32488 31.435678)");
+        Coordinate[] coords = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
+        LineString line = createLine(coords);
+
+        System.out.println(point);
+        System.out.println(pointByWKT);
+        System.out.println(mulPointByWKT);
+        System.out.println(line);
+
+        LineString lineByWKT = createLineByWKT("LINESTRING(0 0, 2 0)");
+        List<Coordinate[]> List = new LinkedList<>();
+        Coordinate[] coords1 = new Coordinate[]{new Coordinate(2, 1), new Coordinate(4, 2)};
+        Coordinate[] coords2 = new Coordinate[]{new Coordinate(3, 2), new Coordinate(1, 2)};
+        List.add(coords1);
+        List.add(coords2);
+        MultiLineString mLine = createMLine(List);
+        System.out.println(lineByWKT);
+        System.out.println(mLine);
+
+        MultiLineString mLineByWKT = createMLineByWKT("MULTILINESTRING((0 0, 2 0),(1 1,2 2))");
+        Polygon polygonByWKT = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+        System.out.println(mLineByWKT);
+        System.out.println(polygonByWKT);
+
+        MultiPolygon mulPolygonByWKT = createMulPolygonByWKT("MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))");
+        System.out.println(mulPolygonByWKT);
+
+        Coordinate[] coords3 = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
+        LineString line2 = createLine(coords3);
+        Polygon poly = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+        Geometry g1 = geometryFactory.createGeometry(line2);
+        Geometry g2 = geometryFactory.createGeometry(poly);
+        Geometry[] garray = new Geometry[]{g1, g2};
+        GeometryCollection geoCollect = createGeoCollect(garray);
+        System.out.println(geoCollect);
+
+        Polygon circle = createCircle(0, 0, 20, 32);
+        System.out.println(circle);
+    }
 }

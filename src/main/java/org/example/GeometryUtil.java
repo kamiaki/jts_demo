@@ -14,10 +14,13 @@ import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * Geometry 工具类
  * 判断两个几何图形是否存在指定的空间关系。包括：
- *
+ * <p>
  * 相等（equals）、
  * 分离（disjoint）、
  * 相交（intersect）、
@@ -33,43 +36,49 @@ public class GeometryUtil {
 
     /**
      * @param args
-     * @throws ParseException
      */
     public static void main(String[] args) throws ParseException {
-        GeometryUtil gt = new GeometryUtil();
-        Polygon p = gt.createCircle(0, 1, 2);
-        //圆上所有的坐标(32个)
-        Coordinate coords[] = p.getCoordinates();
-        for (Coordinate coord : coords) {
-            System.out.println(coord.x + "," + coord.y);
-        }
-        Coordinate coordinate = new Coordinate();
-        coordinate.x = 1;
-        coordinate.y = 2;
-        System.out.println(coordinate.x);
+        Coordinate coordinate = new Coordinate(1, 1);
+        Point point = createPoint(coordinate);
+        Point pointByWKT = createPointByWKT("POINT (109.013388 32.715519)");
+        MultiPoint mulPointByWKT = createMulPointByWKT("MULTIPOINT(109.013388 32.715519,119.32488 31.435678)");
+        Coordinate[] coords = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
+        LineString line = createLine(coords);
 
-        Point pt = gt.createPoint(1,1);
-        System.out.println(pt.getX() + "," + pt.getY());
+        System.out.println(point);
+        System.out.println(pointByWKT);
+        System.out.println(mulPointByWKT);
+        System.out.println(line);
 
-        Point pt2 = gt.createPointByWKT(1,1);
-        System.out.println(pt2.getX() + "," + pt2.getY());
+        LineString lineByWKT = createLineByWKT("LINESTRING(0 0, 2 0)");
+        List<Coordinate[]> List = new LinkedList<>();
+        Coordinate[] coords1 = new Coordinate[]{new Coordinate(2, 1), new Coordinate(4, 2)};
+        Coordinate[] coords2 = new Coordinate[]{new Coordinate(3, 2), new Coordinate(1, 2)};
+        List.add(coords1);
+        List.add(coords2);
+        MultiLineString mLine = createMLine(List);
+        System.out.println(lineByWKT);
+        System.out.println(mLine);
 
-        LineString l_1 = gt.createLine(20, 0, 30, 0);
-        LineString l_2 = gt.createLine(20, 0, 30, 10);
-        LineString l_3 = gt.createLine(30, 10, 30, 15);
-        LineString l_4 = gt.createLine(20, 10, 30, 0);
+        MultiLineString mLineByWKT = createMLineByWKT("MULTILINESTRING((0 0, 2 0),(1 1,2 2))");
+        Polygon polygonByWKT = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+        System.out.println(mLineByWKT);
+        System.out.println(polygonByWKT);
 
-        Polygon pol = gt.createPolygonByWKT();
-        System.out.println(pol);
+        MultiPolygon mulPolygonByWKT = createMulPolygonByWKT("MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))");
+        System.out.println(mulPolygonByWKT);
 
-        System.out.println(l_1.within(pol));
-        System.out.println(l_2.within(pol));
-        System.out.println(l_3.within(pol));
-        System.out.println(l_4.within(pol));
+        Coordinate[] coords3 = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
+        LineString line2 = createLine(coords3);
+        Polygon poly = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+        Geometry g1 = geometryFactory.createGeometry(line2);
+        Geometry g2 = geometryFactory.createGeometry(poly);
+        Geometry[] garray = new Geometry[]{g1, g2};
+        GeometryCollection geoCollect = createGeoCollect(garray);
+        System.out.println(geoCollect);
 
-        System.out.println(pol.within(l_3));
-
-
+        Polygon circle = createCircle(0, 0, 20, 32);
+        System.out.println(circle);
     }
 
     /**
@@ -77,8 +86,8 @@ public class GeometryUtil {
      *
      * @return
      */
-    public static Point createPoint(double lon, double lat) {
-        Coordinate coord = new Coordinate(lon, lat);
+    public static Point createPoint(Coordinate coordinate) {
+        Coordinate coord = new Coordinate(coordinate.x, coordinate.y);
         Point point = geometryFactory.createPoint(coord);
         return point;
     }
@@ -88,22 +97,22 @@ public class GeometryUtil {
      * POINT (109.013388 32.715519)
      *
      * @return
-     * @throws ParseException
      */
-    public static Point createPointByWKT(double lon, double lat) throws ParseException {
+    public static Point createPointByWKT(String str) throws ParseException {
         WKTReader reader = new WKTReader(geometryFactory);
-        Point point = (Point) reader.read("POINT (" + lon + " " + lat + ")");
+        Point point = (Point) reader.read(str);
         return point;
     }
 
     /**
      * create multiPoint by wkt
+     * MULTIPOINT(109.013388 32.715519,119.32488 31.435678)
      *
      * @return
      */
-    public MultiPoint createMulPointByWKT() throws ParseException {
+    public static MultiPoint createMulPointByWKT(String str) throws ParseException {
         WKTReader reader = new WKTReader(geometryFactory);
-        MultiPoint mpoint = (MultiPoint) reader.read("MULTIPOINT(109.013388 32.715519,119.32488 31.435678)");
+        MultiPoint mpoint = (MultiPoint) reader.read(str);
         return mpoint;
     }
 
@@ -112,21 +121,21 @@ public class GeometryUtil {
      *
      * @return
      */
-    public LineString createLine(int a, int b, int c, int d) {
-        Coordinate[] coords = new Coordinate[]{new Coordinate(a, b), new Coordinate(c, d)};
+    public static LineString createLine(Coordinate[] coords) {
         LineString line = geometryFactory.createLineString(coords);
         return line;
     }
 
     /**
      * create a line by WKT
+     * "LINESTRING(0 0, 2 0)"
      *
      * @return
      * @throws ParseException
      */
-    public LineString createLineByWKT() throws ParseException {
+    public static LineString createLineByWKT(String str) throws ParseException {
         WKTReader reader = new WKTReader(geometryFactory);
-        LineString line = (LineString) reader.read("LINESTRING(0 0, 2 0)");
+        LineString line = (LineString) reader.read(str);
         return line;
     }
 
@@ -135,51 +144,47 @@ public class GeometryUtil {
      *
      * @return
      */
-    public MultiLineString createMLine() {
-        Coordinate[] coords1 = new Coordinate[]{new Coordinate(2, 2), new Coordinate(2, 2)};
-        LineString line1 = geometryFactory.createLineString(coords1);
-        Coordinate[] coords2 = new Coordinate[]{new Coordinate(2, 2), new Coordinate(2, 2)};
-        LineString line2 = geometryFactory.createLineString(coords2);
-        LineString[] lineStrings = new LineString[2];
-        lineStrings[0] = line1;
-        lineStrings[1] = line2;
-        MultiLineString ms = geometryFactory.createMultiLineString(lineStrings);
+    public static MultiLineString createMLine(List<Coordinate[]> List) {
+        List<LineString> lineStrings = new LinkedList<>();
+        List.forEach(x -> lineStrings.add(geometryFactory.createLineString(x)));
+        LineString[] lineStrings1 = lineStrings.toArray(new LineString[lineStrings.size()]);
+        MultiLineString ms = geometryFactory.createMultiLineString(lineStrings1);
         return ms;
     }
 
     /**
      * create multiLine by WKT
-     *
+     *  "MULTILINESTRING((0 0, 2 0),(1 1,2 2))"
      * @return
      * @throws ParseException
      */
-    public MultiLineString createMLineByWKT() throws ParseException {
+    public static MultiLineString createMLineByWKT(String str) throws ParseException {
         WKTReader reader = new WKTReader(geometryFactory);
-        MultiLineString line = (MultiLineString) reader.read("MULTILINESTRING((0 0, 2 0),(1 1,2 2))");
+        MultiLineString line = (MultiLineString) reader.read(str);
         return line;
     }
 
     /**
      * create a polygon(多边形) by WKT
-     *
+     *  "POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))"
      * @return
      * @throws ParseException
      */
-    public Polygon createPolygonByWKT() throws ParseException {
+    public static Polygon createPolygonByWKT(String str) throws ParseException {
         WKTReader reader = new WKTReader(geometryFactory);
-        Polygon polygon = (Polygon) reader.read("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+        Polygon polygon = (Polygon) reader.read(str);
         return polygon;
     }
 
-    /**
+    /**createMulPolygonByWKT
      * create multi polygon by wkt
-     *
+     *  "MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))"
      * @return
      * @throws ParseException
      */
-    public MultiPolygon createMulPolygonByWKT() throws ParseException {
+    public static MultiPolygon createMulPolygonByWKT(String str) throws ParseException {
         WKTReader reader = new WKTReader(geometryFactory);
-        MultiPolygon mpolygon = (MultiPolygon) reader.read("MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))");
+        MultiPolygon mpolygon = (MultiPolygon) reader.read(str);
         return mpolygon;
     }
 
@@ -187,14 +192,8 @@ public class GeometryUtil {
      * create GeometryCollection  contain point or multiPoint or line or multiLine or polygon or multiPolygon
      *
      * @return
-     * @throws ParseException
      */
-    public GeometryCollection createGeoCollect() throws ParseException {
-        LineString line = createLine(1, 1, 1, 1);
-        Polygon poly = createPolygonByWKT();
-        Geometry g1 = geometryFactory.createGeometry(line);
-        Geometry g2 = geometryFactory.createGeometry(poly);
-        Geometry[] garray = new Geometry[]{g1, g2};
+    public static GeometryCollection createGeoCollect(Geometry[] garray) {
         GeometryCollection gc = geometryFactory.createGeometryCollection(garray);
         return gc;
     }
@@ -204,19 +203,18 @@ public class GeometryUtil {
      *
      * @param x
      * @param y
-     * @param RADIUS
+     * @param radius
      * @return
      */
-    public Polygon createCircle(double x, double y, final double RADIUS) {
-        final int SIDES = 32;//圆上面的点个数
-        Coordinate coords[] = new Coordinate[SIDES + 1];
-        for (int i = 0; i < SIDES; i++) {
-            double angle = ((double) i / (double) SIDES) * Math.PI * 2.0;
-            double dx = Math.cos(angle) * RADIUS;
-            double dy = Math.sin(angle) * RADIUS;
-            coords[i] = new Coordinate((double) x + dx, (double) y + dy);
+    public static Polygon createCircle(double x, double y, double radius, int count) {
+        Coordinate coords[] = new Coordinate[count + 1];
+        for (int i = 0; i < count; i++) {
+            double angle = ((double) i / (double) count) * Math.PI * 2.0;
+            double dx = Math.cos(angle) * radius;
+            double dy = Math.sin(angle) * radius;
+            coords[i] = new Coordinate(x + dx, y + dy);
         }
-        coords[SIDES] = coords[0];
+        coords[count] = coords[0];  // 首尾相接
         LinearRing ring = geometryFactory.createLinearRing(coords);
         Polygon polygon = geometryFactory.createPolygon(ring, null);
         return polygon;

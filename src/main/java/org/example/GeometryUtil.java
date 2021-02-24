@@ -1,19 +1,12 @@
 package org.example;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.MultiLineString;
-import com.vividsolutions.jts.geom.MultiPoint;
+import com.google.gson.Gson;
+import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
+import org.geotools.geojson.geom.GeometryJSON;
 
+import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,52 +26,120 @@ import java.util.List;
  */
 public class GeometryUtil {
     private final static GeometryFactory geometryFactory = new GeometryFactory();
+    private final static String CHINA = "/china.json";
+
+    public static void main(String[] args) throws Exception {
+        String[][] pointInPcc = getPointInPcc(116.410162,39.842012);
+        System.out.println(pointInPcc[0][0] + pointInPcc[0][1]);
+        System.out.println(pointInPcc[1][0] + pointInPcc[1][1]);
+        System.out.println(pointInPcc[2][0] + pointInPcc[2][1]);
+    }
+
 
     /**
-     * @param args
+     * 在右边 补零到指定位数
+     * @param str
+     * @param strLength
+     * @return
      */
-    public static void main(String[] args) throws ParseException {
-        Coordinate coordinate = new Coordinate(1, 1);
-        Point point = createPoint(coordinate);
-        Point pointByWKT = createPointByWKT("POINT (109.013388 32.715519)");
-        MultiPoint mulPointByWKT = createMulPointByWKT("MULTIPOINT(109.013388 32.715519,119.32488 31.435678)");
-        Coordinate[] coords = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
-        LineString line = createLine(coords);
+    private static String addZeroForNumRight(String str, int strLength) {
+        int strLen = str.length();
+        if (strLen < strLength) {
+            while (strLen < strLength) {
+                StringBuilder sb = new StringBuilder();
+//                sb.append("0").append(str);//   左补0
+                sb.append(str).append("0");//   右补0
+                str = sb.toString();
+                strLen = str.length();
+            }
+        }
+        return str;
+    }
 
-        System.out.println(point);
-        System.out.println(pointByWKT);
-        System.out.println(mulPointByWKT);
-        System.out.println(line);
+    /**
+     * 判断点，在那个行政区划
+     * return String [[xxxx,省]，[xxxx,市]，[xxxx,县]]
+     */
+    public static String[][] getPointInPcc(double lon, double lat) throws Exception {
+        String[][] pcc = new String[][]{{"", ""}, {"", ""}, {"", ""}};
+        GeometryJSON geometryJSON = new GeometryJSON();
+        // 创建点
+        Point point = createPoint(lon, lat);
+        // 获取省区域
+        String geoJsonChina = jarDataReadStatic(CHINA);
+        if (geoJsonChina == null || geoJsonChina.trim().length() <= 0) return pcc;
+        List<GeoJsonObj.Features> featuresProvinces = new Gson().fromJson(geoJsonChina, GeoJsonObj.class).getFeatures();
+        // 循环 判断省
+        for (GeoJsonObj.Features featuresProvince : featuresProvinces) {
+            Geometry geometryProvince = geometryJSON.read(new StringReader(new Gson().toJson(featuresProvince.getGeometry())));
+            if (geometryProvince.contains(point)) {
+                pcc[0][0] = addZeroForNumRight(featuresProvince.getProperties().getId(), 6);
+                pcc[0][1] = featuresProvince.getProperties().getName();
+                // 获取 市区域 存着市的省文件不用补0
+                String geoJsonCity = jarDataReadStatic(new StringBuilder("/").append(featuresProvince.getProperties().getId()).append(".json").toString());
+                if (geoJsonCity == null || geoJsonCity.trim().length() <= 0) break;
+                List<GeoJsonObj.Features> featuresCities = new Gson().fromJson(geoJsonCity, GeoJsonObj.class).getFeatures();
+                // 循环 判断市
+                for (GeoJsonObj.Features featuresCity : featuresCities) {
+                    Geometry geometryCity = geometryJSON.read(new StringReader(new Gson().toJson(featuresCity.getGeometry())));
+                    if (geometryCity.contains(point)) {
+                        pcc[1][0] = addZeroForNumRight(featuresCity.getProperties().getId(), 6);
+                        pcc[1][1] = featuresCity.getProperties().getName();
+                        // 获取县 区域 存着县的市文件用补0
+                        String geoJsonCounty = jarDataReadStatic(new StringBuilder("/").append(pcc[1][0]).append(".json").toString());
+                        if (geoJsonCounty == null || geoJsonCounty.trim().length() <= 0) break;
+                        List<GeoJsonObj.Features> featuresCounties = new Gson().fromJson(geoJsonCounty, GeoJsonObj.class).getFeatures();
+                        // 循环 判断县
+                        for (GeoJsonObj.Features featuresCounty : featuresCounties) {
+                            Geometry geometryCounty = geometryJSON.read(new StringReader(new Gson().toJson(featuresCounty.getGeometry())));
+                            if (geometryCounty.contains(point)) {
+                                pcc[2][0] = addZeroForNumRight(featuresCounty.getProperties().getId(), 6);
+                                pcc[2][1] = featuresCounty.getProperties().getName();
+                                break;
+                            }
+                        }// 循环 判断县
+                    }
+                }// 循环 判断省
+            }
+        }// 循环 判断省
+        return pcc;
+    }
 
-        LineString lineByWKT = createLineByWKT("LINESTRING(0 0, 2 0)");
-        List<Coordinate[]> List = new LinkedList<>();
-        Coordinate[] coords1 = new Coordinate[]{new Coordinate(2, 1), new Coordinate(4, 2)};
-        Coordinate[] coords2 = new Coordinate[]{new Coordinate(3, 2), new Coordinate(1, 2)};
-        List.add(coords1);
-        List.add(coords2);
-        MultiLineString mLine = createMLine(List);
-        System.out.println(lineByWKT);
-        System.out.println(mLine);
 
-        MultiLineString mLineByWKT = createMLineByWKT("MULTILINESTRING((0 0, 2 0),(1 1,2 2))");
-        Polygon polygonByWKT = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
-        System.out.println(mLineByWKT);
-        System.out.println(polygonByWKT);
+    /**
+     * jar数据读取 静态
+     *
+     * @param filePath
+     * @return
+     */
+    public static String jarDataReadStatic(String filePath) {
+        String dataStr;
+        try {
+            InputStream inputStream = ReadJarData.class.getResourceAsStream(filePath);
+            InputStreamReader reader = new InputStreamReader(inputStream, "UTF-8");
+            BufferedReader bReader = new BufferedReader(reader);
+            StringBuilder sb = new StringBuilder();
+            String s;
+            while ((s = bReader.readLine()) != null) {
+                sb.append(s);
+            }
+            bReader.close();
+            dataStr = sb.toString();
+        } catch (Exception e) {
+            dataStr = "";
+        }
+        return dataStr;
+    }
 
-        MultiPolygon mulPolygonByWKT = createMulPolygonByWKT("MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))");
-        System.out.println(mulPolygonByWKT);
-
-        Coordinate[] coords3 = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
-        LineString line2 = createLine(coords3);
-        Polygon poly = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
-        Geometry g1 = geometryFactory.createGeometry(line2);
-        Geometry g2 = geometryFactory.createGeometry(poly);
-        Geometry[] garray = new Geometry[]{g1, g2};
-        GeometryCollection geoCollect = createGeoCollect(garray);
-        System.out.println(geoCollect);
-
-        Polygon circle = createCircle(0, 0, 20, 32);
-        System.out.println(circle);
+    /**
+     * create a point
+     *
+     * @return
+     */
+    public static Point createPoint(double lon, double lat) {
+        Coordinate coord = new Coordinate(lon, lat);
+        Point point = geometryFactory.createPoint(coord);
+        return point;
     }
 
     /**
@@ -154,7 +215,8 @@ public class GeometryUtil {
 
     /**
      * create multiLine by WKT
-     *  "MULTILINESTRING((0 0, 2 0),(1 1,2 2))"
+     * "MULTILINESTRING((0 0, 2 0),(1 1,2 2))"
+     *
      * @return
      * @throws ParseException
      */
@@ -166,7 +228,8 @@ public class GeometryUtil {
 
     /**
      * create a polygon(多边形) by WKT
-     *  "POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))"
+     * "POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))"
+     *
      * @return
      * @throws ParseException
      */
@@ -176,9 +239,11 @@ public class GeometryUtil {
         return polygon;
     }
 
-    /**createMulPolygonByWKT
+    /**
+     * createMulPolygonByWKT
      * create multi polygon by wkt
-     *  "MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))"
+     * "MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))"
+     *
      * @return
      * @throws ParseException
      */
@@ -219,4 +284,51 @@ public class GeometryUtil {
         Polygon polygon = geometryFactory.createPolygon(ring, null);
         return polygon;
     }
+
+//    /**
+//     * @param args
+//     */
+//    public static void main(String[] args) throws ParseException {
+//        Coordinate coordinate = new Coordinate(1, 1);
+//        Point point = createPoint(coordinate);
+//        Point pointByWKT = createPointByWKT("POINT (109.013388 32.715519)");
+//        MultiPoint mulPointByWKT = createMulPointByWKT("MULTIPOINT(109.013388 32.715519,119.32488 31.435678)");
+//        Coordinate[] coords = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
+//        LineString line = createLine(coords);
+//
+//        System.out.println(point);
+//        System.out.println(pointByWKT);
+//        System.out.println(mulPointByWKT);
+//        System.out.println(line);
+//
+//        LineString lineByWKT = createLineByWKT("LINESTRING(0 0, 2 0)");
+//        List<Coordinate[]> List = new LinkedList<>();
+//        Coordinate[] coords1 = new Coordinate[]{new Coordinate(2, 1), new Coordinate(4, 2)};
+//        Coordinate[] coords2 = new Coordinate[]{new Coordinate(3, 2), new Coordinate(1, 2)};
+//        List.add(coords1);
+//        List.add(coords2);
+//        MultiLineString mLine = createMLine(List);
+//        System.out.println(lineByWKT);
+//        System.out.println(mLine);
+//
+//        MultiLineString mLineByWKT = createMLineByWKT("MULTILINESTRING((0 0, 2 0),(1 1,2 2))");
+//        Polygon polygonByWKT = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+//        System.out.println(mLineByWKT);
+//        System.out.println(polygonByWKT);
+//
+//        MultiPolygon mulPolygonByWKT = createMulPolygonByWKT("MULTIPOLYGON(((40 10, 30 0, 40 10, 30 20, 40 10),(30 10, 30 0, 40 10, 30 20, 30 10)))");
+//        System.out.println(mulPolygonByWKT);
+//
+//        Coordinate[] coords3 = new Coordinate[]{new Coordinate(1, 2), new Coordinate(1, 2)};
+//        LineString line2 = createLine(coords3);
+//        Polygon poly = createPolygonByWKT("POLYGON((20 10, 30 0, 40 10, 30 20, 20 10))");
+//        Geometry g1 = geometryFactory.createGeometry(line2);
+//        Geometry g2 = geometryFactory.createGeometry(poly);
+//        Geometry[] garray = new Geometry[]{g1, g2};
+//        GeometryCollection geoCollect = createGeoCollect(garray);
+//        System.out.println(geoCollect);
+//
+//        Polygon circle = createCircle(0, 0, 20, 32);
+//        System.out.println(circle);
+//    }
 }
